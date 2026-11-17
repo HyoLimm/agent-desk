@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agent-desk",
+  "description": "A pixel potato office worker at a desk that shows what each Claude Code session and subagent is doing. Windows only.",
+  "owner": { "name": "edwin" },
+  "plugins": [
+    {
+      "name": "agent-desk",
+      "description": "A pixel potato office worker at a desk that shows what each Claude Code session and subagent is doing. Windows only.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

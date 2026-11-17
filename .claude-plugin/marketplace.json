@@ -1,12 +1,12 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agent-desk",
-  "description": "A pixel potato office worker at a desk that shows what each Claude Code session and subagent is doing. Windows only.",
+  "description": "Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상에 앉은 픽셀 감자 직장인이 보여 줍니다. Windows 전용.",
   "owner": { "name": "edwin" },
   "plugins": [
     {
       "name": "agent-desk",
-      "description": "A pixel potato office worker at a desk that shows what each Claude Code session and subagent is doing. Windows only.",
+      "description": "Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상에 앉은 픽셀 감자 직장인이 보여 줍니다. Windows 전용.",
       "source": "./",
       "category": "productivity"
     }

@@ -10,6 +10,7 @@ Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상�
 
 - Windows
 - Python 3.10 이상(tkinter 포함), PATH에서 `python`으로 실행 가능해야 합니다
+- Python이 없으면 채팅을 시작할 때 설치 안내가 뜹니다. Python은 자동으로 설치되지 않습니다
 
 ### 설치
 
@@ -62,6 +63,7 @@ A pixel potato office worker at a desk that shows what each Claude Code session 
 
 - Windows
 - Python 3.10+ with tkinter, runnable as `python` from PATH
+- If Python is missing, an install hint is shown when a session starts. Python is not installed automatically
 
 ### Install
 

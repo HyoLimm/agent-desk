@@ -20,7 +20,7 @@ QUIPS = {  # 상태가 바뀔 때 책상 밑 글자 자리에 잠깐 뜨는 한�
     "done": ["퇴근각", "끝!", "칼퇴"],
     "fail": ["아니 왜", "망했다", "어…"],
 }
-CAPTIONS = {"idle_b": "부재중"}  # 포즈별 밑 글자(대사가 없을 때 표시)
+CAPTIONS = {"idle_b": ["부재중", "쉬러감", "화장실감", "도망감"]}  # 포즈별 밑 글자 후보(포즈가 정해질 때 하나를 골라 대사가 없을 때 표시)
 
 
 def variants(state, keys):
@@ -213,6 +213,7 @@ def window():
     last_state = {}  # 종류 -> 직전에 그린 상태
     quip = {}  # 종류 -> (대사, 표시 끝 시각)
     pose = {}  # 종류 -> 지금 그리는 포즈 키(상태가 바뀔 때 변형 중 하나를 랜덤으로 고름)
+    caption = {}  # 종류 -> 지금 포즈의 밑 글자(포즈를 고를 때 함께 골라 tick마다 바뀌지 않게 함)
     # 하위 종류 책상 자리: 아래 줄 칸 3->0, 가운데 줄 3->0, 위 줄 3->0
     cells = [(r, i) for r in (2, 1, 0) for i in (3, 2, 1, 0)]
 
@@ -229,6 +230,7 @@ def window():
                 last_state.pop(t, None)
                 quip.pop(t, None)
                 pose.pop(t, None)
+                caption.pop(t, None)
                 continue
             insts = alive.get(t, [])
             # done은 6초 지나면 idle로 본다
@@ -238,6 +240,7 @@ def window():
             if last_state.get(t) != state:
                 last_state[t] = state
                 pose[t] = random.choice(variants(state, FRAMES) or [state])
+                caption[t] = random.choice(CAPTIONS.get(pose[t], [""]))
                 if state in QUIPS:
                     quip[t] = (random.choice(QUIPS[state]), now + 4)
                 else:
@@ -245,7 +248,7 @@ def window():
             said = quip[t][0] if t in quip and now < quip[t][1] else ""
             # 밑 글자는 한글 대사만 보여 준다. 같은 종류가 여러 개면 개수 표시: 지휘자는 "3인분 하는 중", 하위 종류는 "알바 3명"
             text = ("%d인분 하는 중" if t == "" else "알바 %d명") % len(insts) if len(insts) >= 2 else ""
-            text = CAPTIONS.get(pose.get(t, state)) or text
+            text = caption.get(t) or text
             if t == "":
                 shown[(2, 4)] = (3, ti, pose.get(t, state), said or text)
             else:
@@ -314,7 +317,7 @@ def test():
     assert variants("work", ["idle", "idle_b", "work"]) == ["work"]
     assert all(k.split("_")[0] in ("idle", "work", "wait", "done", "fail") for k in FRAMES), list(FRAMES)
     assert all(s in FRAMES for s in ("idle", "work", "wait", "done", "fail"))
-    assert all(k in FRAMES and 0 < len(v) <= 5 for k, v in CAPTIONS.items()), CAPTIONS
+    assert all(k in FRAMES and v and all(0 < len(s) <= 5 for s in v) for k, v in CAPTIONS.items()), CAPTIONS
     print("ok")
 
 

@@ -472,6 +472,158 @@ def work_c(f):
     return c
 
 
+def _work_base(c, ox=0, lean=0):
+    pos = potato(c, ox=ox, lean=lean)
+    tie(c, pos)
+    scene(c)
+    return pos
+
+
+def _codelines(c, f):
+    for i in range(5):
+        ind, ln = LINES[i + f]
+        rect(c, 19 + ind, 9 + 2 * i, ln, 1, "t")
+
+
+def _typing(c, pos, f, trail=False):
+    """키보드 위에서 번갈아 치는 두 손."""
+    lh, rh = ((5, 21), (11, 22)) if f == 0 else ((5, 22), (11, 21))
+    lt = [pos(4, 22 - 2 * (f == 0))] if trail else ()
+    rt = [pos(12, 20 + 2 * (f == 0))] if trail else ()
+    arm(c, *pos(3, 19), *pos(*lh), trail=lt)
+    arm(c, *pos(15, 19), *pos(*rh), trail=rt)
+
+
+NOTE = ["..yy", "..y.", "..y.", "yyy.", "yy.."]
+
+
+def _note(c, x, y, ch):
+    stamp(c, x, y, [r.replace("y", ch) for r in NOTE])
+
+
+def work_d(f):
+    """콧노래: 감은 ^ 눈 + 활짝 웃는 입 + 떠다니는 음표."""
+    c = blank()
+    pos = _work_base(c, lean=(1, -1)[f])
+    _codelines(c, f)
+    spr(c, pos, 5, 14, [".k.", "k.k"])
+    spr(c, pos, 10, 14, [".k.", "k.k"])
+    spr(c, pos, 6, 17, ["kkkkkk"])
+    spr(c, pos, 6, 18, ["kwwwwk"])
+    spr(c, pos, 7, 19, ["kkkk"])
+    sprout_up(c, pos)
+    for x, y, ch in ([(0, 3, "w"), (12, 2, "y"), (21, 1, "w")],
+                     [(1, 1, "y"), (13, 0, "w"), (22, 0, "y")])[f]:
+        _note(c, x, y, ch)
+    _typing(c, pos, f)
+    return c
+
+
+GHOST = ["..www..", ".wwwww.", "wwkwkww", "wwwwwww", "wwwwwww", "w.www.w"]
+
+
+def work_e(f):
+    """영혼 가출: 멍한 눈·입, 머리 위로 빠져나가는 흰 유령."""
+    c = blank()
+    pos = _work_base(c)
+    _codelines(c, f)
+    for ex in (4, 10):
+        spr(c, pos, ex, 13, ["kkkk", "kwwk", "kwwk", "kkkk"])
+    spr(c, pos, 7, 17, [".k.", "kkk", "kkk", ".k."])
+    if f == 0:
+        stamp(c, 5, 1, GHOST)
+        stamp(c, 8, 7, ["ww"])
+    else:
+        stamp(c, 6, 0, GHOST)
+        stamp(c, 9, 6, ["w"])
+        stamp(c, 8, 7, ["ww"])
+    _typing(c, pos, f)
+    return c
+
+
+def work_f(f):
+    """안경 집중: 동그란 안경, 렌즈 반사, 꾹 다문 입."""
+    c = blank()
+    pos = _work_base(c, lean=1)
+    _codelines(c, f)
+    lens = [".kkk.", "kwwwk", "kwwwk", "kwwwk", ".kkk."]
+    spr(c, pos, 4, 13, lens)
+    spr(c, pos, 10, 13, lens)
+    spr(c, pos, 9, 15, ["k"])
+    spr(c, pos, 7, 16, ["k"])
+    spr(c, pos, 13, 16, ["k"])
+    refl = ([(5, 14), (6, 15), (11, 14), (12, 15)], [(7, 14), (6, 15), (13, 14), (12, 15)])[f]
+    for x, y in refl:
+        spr(c, pos, x, y, ["t"])
+    spr(c, pos, 7, 18, ["kkkk"])
+    sprout_up(c, pos)
+    if f == 0:
+        _typing(c, pos, f)
+    else:
+        arm(c, *pos(3, 19), *pos(5, 22))
+        arm(c, 15, 19, 16, 14)
+    return c
+
+
+def work_g(f):
+    """땀 범벅: 걱정 눈썹, 물결 입, 사방 땀방울, 책상 물웅덩이."""
+    c = blank()
+    pos = _work_base(c)
+    _codelines(c, f)
+    for ex in (5, 10):
+        spr(c, pos, ex, 13, ["www"] * 3)
+    spr(c, pos, 6, 14, ["k"])
+    spr(c, pos, 11, 14, ["k"])
+    spr(c, pos, 4, 10, ["..kk", ".k..", "k..."])
+    spr(c, pos, 10, 10, ["kk..", "..k.", "...k"])
+    spr(c, pos, 6, 17, [".k.k.k.", "k.k.k.k"])
+    sprout_up(c, pos)
+    drops = ([(1, 3), (5, 0), (12, 1), (15, 4), (0, 10), (0, 15), (14, 17)],
+             [(2, 5), (7, 0), (13, 3), (15, 0), (0, 8), (0, 13), (15, 18)])[f]
+    for x, y in drops:
+        stamp(c, x, y, [".w", "ww"])
+    if f == 0:
+        rect(c, 19, 25, 6, 1, "w")
+        rect(c, 18, 26, 8, 1, "w")
+        put(c, 20, 26, "t")
+        put(c, 23, 26, "t")
+        put(c, 21, 25, "t")
+        arm(c, 3, 19, 4, 21, trail=[(4, 22)])
+        arm(c, 15, 19, 12, 22, trail=[(12, 20)])
+    else:
+        rect(c, 18, 25, 8, 1, "w")
+        rect(c, 17, 26, 10, 1, "w")
+        put(c, 19, 26, "t")
+        put(c, 23, 26, "t")
+        put(c, 25, 26, "t")
+        put(c, 21, 25, "t")
+        arm(c, 3, 19, 6, 22, trail=[(5, 20)])
+        arm(c, 15, 19, 10, 21, trail=[(11, 22)])
+    return c
+
+
+def work_h(f):
+    """헤드폰: 큰 이어컵, 머리띠, 리듬 타며 좌우로 기울기."""
+    c = blank()
+    pos = _work_base(c, ox=(0, 2)[f])
+    _codelines(c, f)
+    pts = [(2, 10), (3, 8), (5, 6), (7, 5), (10, 5), (12, 6), (14, 8), (15, 10)]
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        for dy in (0, 1):
+            line(c, *pos(x0, y0 + dy), *pos(x1, y1 + dy), "k")
+    sprout_up(c, pos)
+    spr(c, pos, 5, 14, [".k.", "k.k"])
+    spr(c, pos, 9, 14, [".k.", "k.k"])
+    spr(c, pos, 7, 17, [".kk.", "k..k", ".kk."])
+    cup = ["kkkk", "kttk", "kttk", "kttk", "kkkk"]
+    spr(c, pos, 1, 10, cup)
+    spr(c, pos, 12, 10, cup)
+    for x, y in ([(22, 2), (0, 0)], [(24, 0), (0, 2)])[f]:
+        _note(c, x, y, "y")
+    _typing(c, pos, f)
+    return c
+
+
 def idle_b(f):
     """부재중: 감자 없는 빈 책상. 돌아간 빈 의자 + 세워 둔 안내 카드 + 걸린 넥타이."""
     c = blank()
@@ -509,6 +661,8 @@ def _build():
     out = {}
     for name, fn in (("idle", idle), ("idle_b", idle_b), ("idle_c", idle_c), ("work", work),
                      ("work_b", work_b), ("work_c", work_c),
+                     ("work_d", work_d), ("work_e", work_e), ("work_f", work_f),
+                     ("work_g", work_g), ("work_h", work_h),
                      ("wait", wait), ("done", done), ("done_b", done_b), ("done_c", done_c),
                      ("fail", fail)):
         out[name] = [text(fn(f)) for f in (0, 1)]
@@ -519,7 +673,7 @@ FRAMES = _build()
 
 if __name__ == "__main__":
     assert list(FRAMES) == ["idle", "idle_b", "idle_c", "work", "work_b", "work_c",
-                            "wait", "done", "done_b", "done_c", "fail"]
+                            "work_d", "work_e", "work_f", "work_g", "work_h", "wait", "done", "done_b", "done_c", "fail"]
     ok_chars = set(PALETTE) | {"."}
     for name, fr in FRAMES.items():
         assert len(fr) == 2, name

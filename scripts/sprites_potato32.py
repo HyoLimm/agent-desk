@@ -388,76 +388,87 @@ def work_b(f):
     pos = potato(c)
     tie(c, pos)
     scene(c)
-    spr(c, pos, 6, 12, ["bb"])                  # 화난 눈썹(안쪽이 아래)
-    spr(c, pos, 5, 11, ["b"])
-    spr(c, pos, 10, 12, ["bb"])
-    spr(c, pos, 12, 11, ["b"])
-    for ex in (5, 10):                          # 불타는 눈
-        spr(c, pos, ex, 13, ["rrr", "yyy", "rrr"])
-    flames = ([(5, 12, "y"), (5, 11, "r"), (7, 12, "r"), (10, 12, "r"), (12, 12, "y"), (12, 11, "r")],
-              [(6, 12, "r"), (7, 11, "y"), (7, 10, "r"), (10, 12, "y"), (11, 11, "r"), (10, 10, "r")])[f]
-    for x, y, ch in flames:
-        put(c, x, y, ch)
+    for ex in (5, 10):                          # 흰자 3x3 + 동공
+        spr(c, pos, ex, 13, ["www"] * 3)
+    spr(c, pos, 6, 14, ["kk"])
+    spr(c, pos, 10, 14, ["kk"])
+    spr(c, pos, 4, 11, ["kk"])                  # V자 굵은 눈썹(안쪽이 아래)
+    spr(c, pos, 6, 12, ["kk"])
+    spr(c, pos, 12, 11, ["kk"])
+    spr(c, pos, 10, 12, ["kk"])
     spr(c, pos, 6, 17, ["kkkkkk"])              # 이를 악문 입
     spr(c, pos, 6, 18, ["kwwwwk"])
     spr(c, pos, 7, 19, ["kkkk"])
-    rect(c, 4, 9, 10, 2, "r")                   # 필승 머리띠
-    rect(c, 8, 9, 2, 2, "w")
+    mx = 9 + f                                  # 이마 화남 표시
+    spr(c, pos, mx, 8, [".r.", "r.r", ".r."])
+    if f == 1:
+        spr(c, pos, mx + 1, 7, ["r"])
+    spr(c, pos, 6, 3, ["kk.kk"])                # 그을린 새싹
+    spr(c, pos, 7, 4, ["kkk"])
+    spr(c, pos, 8, 5, ["k", "k"])
+    for i in range(5):                          # 코드 줄, 위로 한 줄 밀림
+        ind, ln = LINES[(i + f + 1) % 6]
+        rect(c, 19 + ind, 9 + 2 * i, ln, 1, "t")
+    tall = [".r.", ".r.", "rr.", "rrr", "ryr", "ryr"]
+    mid = [".r.", ".rr", "rrr", "ryr", "ryr"]
+    low = [".r.", "rrr", "ryr"]
     if f == 0:
-        stamp(c, 0, 8, [".rr", "rr."])
-        stamp(c, 1, 11, ["r"])
+        flames = [(2, 2, tall), (4, 5, low), (12, 3, tall), (14, 6, low),
+                  (-1, 10, mid), (-1, 16, mid), (16, 10, mid), (16, 16, mid)]
+        steam = []
     else:
-        stamp(c, 0, 10, ["rr.", ".rr", "..r"])
-    sprout_up(c, pos)
-    for i in range(9):                          # 꽉 찬 코드 줄, 위로 밀림
-        if (i + f) % 3 == 2:
-            continue
-        ind, ln = LINES[(i + f) % 6]
-        rect(c, 19 + ind, 9 + i, min(ln + 3, 10 - ind), 1, "t")
+        flames = [(2, 3, mid), (4, 4, tall), (12, 4, mid), (13, 1, tall),
+                  (-1, 11, tall), (-1, 17, mid), (16, 11, tall), (16, 17, mid)]
+        steam = [(8, 1), (9, 0)]
+    for x, y, rows in flames:
+        stamp(c, x, y, rows)
+    for x, y in steam:
+        put(c, x, y, "g")
     if f == 0:
-        arm(c, 3, 19, 6, 21, trail=[(4, 17), (3, 14)])
-        arm(c, 15, 19, 12, 14, trail=[(14, 16), (13, 12)])
-        stamp(c, 3, 21, ["w.w", ".w."])
-        stamp(c, 9, 20, ["w.w"])
+        arm(c, 3, 19, 5, 20, trail=[(4, 17)])
+        arm(c, 15, 19, 11, 22, trail=[(13, 20)])
+        stamp(c, 13, 21, ["w", ".w"])
+        stamp(c, 8, 20, ["g"])
+        stamp(c, 12, 19, ["g"])
+        stamp(c, 14, 20, ["g"])
     else:
-        arm(c, 3, 19, 4, 14, trail=[(4, 17), (4, 20)])
-        arm(c, 15, 19, 10, 21, trail=[(13, 17), (12, 19)])
-        stamp(c, 7, 20, ["w.w", ".w."])
-        stamp(c, 12, 20, ["w", ".w"])
+        arm(c, 3, 19, 5, 22, trail=[(4, 20)])
+        arm(c, 15, 19, 11, 20, trail=[(13, 17)])
+        stamp(c, 3, 21, ["w"])
+        stamp(c, 7, 21, [".w", "w."])
+        stamp(c, 7, 19, ["g"])
+        stamp(c, 13, 19, ["g"])
+        stamp(c, 3, 20, ["g"])
     return c
 
 
 def work_c(f):
     c = blank()
-    pos = potato(c)
+    pos = potato(c, oy=1)                       # 평소보다 1칸 처져 앉음
     tie(c, pos)
     scene(c)
     for i in range(5):
         ind, ln = LINES[i + f]
         rect(c, 19 + ind, 9 + 2 * i, ln, 1, "t")
-    for sx, wd in ((0, 4), (11, 5)):            # 서류 탑 두 개
-        rect(c, sx, 15, wd, 10, "w")
-        for y in (17, 20, 23):
-            rect(c, sx, y, wd, 1, "g")
-        rect(c, sx + wd - 1 if sx == 0 else sx, 15, 1, 10, "k")
-    for ex in (4, 8):                           # 지친 눈: 반쯤 감김 + 다크서클
-        spr(c, pos, ex, 13, ["kkk", "wkw", "bbb"])
-    spr(c, pos, 6, 17, ["kkkk"])                # 일자 입
-    stamp(c, 14, 5, [".w", "ww", "ww"])         # 땀방울
-    sprout_up(c, pos)
+    lid = (["ppp", "kkk", "wkw"], ["ppp", "ppp", "kkk"])[f]   # 반쯤 감긴 눈 -> 거의 감김
+    for ex in (5, 10):
+        spr(c, pos, ex, 12, lid)
+        spr(c, pos, ex, 15, ["bbb", "bbb"])     # 다크서클
+    spr(c, pos, 4, 11, ["k"])                   # 팔자 눈썹(바깥쪽이 아래)
+    spr(c, pos, 5, 10, ["kk"])
+    spr(c, pos, 10, 10, ["kk"])
+    spr(c, pos, 12, 11, ["k"])
+    spr(c, pos, 6, 18, [".kk.", "k..k"])        # 처진 입
+    spr(c, pos, 13, 12 + f, ["w"])              # 땀방울
+    sprout(c, pos, "droop")
+    if f == 1:
+        spr(c, pos, 11, 18, ["gg", ".g"])       # 한숨 구름
+        spr(c, pos, 13, 17, ["g"])
+    arm(c, 3, 20, 5, 22)
     if f == 0:
-        arm(c, 10, 16, 14, 8)
-        rect(c, 14, 10, 2, 3, "b")
-        rect(c, 12, 13, 6, 2, "r")
-        for x, y in ((3, 6), (8, 0), (24, 3)):
-            stamp(c, x, y, ["ww", "w."])
+        arm(c, 15, 20, 11, 21)
     else:
-        arm(c, 10, 16, 14, 11)
-        rect(c, 14, 13, 2, 2, "b")
-        rect(c, 12, 15, 6, 2, "r")
-        rect(c, 12, 19, 3, 2, "r")              # 찍힌 자국
-        for x, y in ((5, 9), (9, 3), (22, 1)):
-            stamp(c, x, y, ["ww", "w."])
+        arm(c, 15, 20, 11, 22)
     return c
 
 

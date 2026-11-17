@@ -243,8 +243,8 @@ def window():
                 else:
                     quip.pop(t, None)
             said = quip[t][0] if t in quip and now < quip[t][1] else ""
-            # 밑 글자는 한글 대사만 보여 준다. 같은 종류가 여러 개면 개수 표시: 지휘자는 "채팅 3개", 하위 종류는 "3명"
-            text = ("채팅 %d개" if t == "" else "%d명") % len(insts) if len(insts) >= 2 else ""
+            # 밑 글자는 한글 대사만 보여 준다. 같은 종류가 여러 개면 개수 표시: 지휘자는 "3인분 하는 중", 하위 종류는 "알바 3명"
+            text = ("%d인분 하는 중" if t == "" else "알바 %d명") % len(insts) if len(insts) >= 2 else ""
             text = CAPTIONS.get(pose.get(t, state)) or text
             if t == "":
                 shown[(2, 4)] = (3, ti, pose.get(t, state), said or text)

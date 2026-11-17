@@ -1,6 +1,6 @@
 {
   "name": "agent-desk",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상에 앉은 픽셀 감자 직장인이 보여 줍니다. Windows 전용.",
   "license": "MIT",
   "hooks": {

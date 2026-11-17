@@ -22,7 +22,7 @@ Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상�
 
 - 세션이 시작되면 창이 자동으로 뜹니다.
 - 에이전트 종류마다 책상이 하나씩 생기고 네온 색이 서로 다릅니다. 메인 세션들은 큰 책상 하나(지휘자)를 같이 씁니다.
-- 같은 종류의 에이전트가 여러 개면 한 책상을 같이 쓰고 개수를 표시합니다(예: `3명`). 지휘자 책상은 살아 있는 채팅 수를 표시합니다(예: `채팅 3개`).
+- 같은 종류의 에이전트가 여러 개면 한 책상을 같이 쓰고 개수를 표시합니다(예: `알바 3명`). 지휘자 책상은 살아 있는 채팅 수를 표시합니다(예: `3인분 하는 중`).
 - 책상의 상태가 바뀌면 몇 초 동안 짧은 한마디가 뜹니다.
 - 10분 동안 쓰이지 않은 책상은 숨겨집니다.
 - 창은 끌어서 옮기고, 오른쪽 클릭으로 닫습니다.
@@ -74,7 +74,7 @@ A pixel potato office worker at a desk that shows what each Claude Code session 
 
 - The window opens automatically when a session starts.
 - Each agent type gets one desk, with its own neon color. The main sessions share one big desk (the conductor).
-- Several agents of the same type share a desk and show a count (Korean, e.g. `3명`; the conductor desk shows the number of live chats, e.g. `채팅 3개`).
+- Several agents of the same type share a desk and show a count (Korean, e.g. `알바 3명`; the conductor desk shows the number of live chats, e.g. `3인분 하는 중`).
 - When a desk changes state it shows a short quip for a few seconds (Korean for now).
 - A desk that goes unused for 10 minutes is hidden.
 - Drag to move the window. Right-click to close it.

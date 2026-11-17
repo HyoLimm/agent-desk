@@ -45,3 +45,7 @@ State files are written only to `~/.claude/agent-desk/state`. Nothing is sent ov
 ```
 
 Right-click the window to close it, then delete `~/.claude/agent-desk` if you want to remove the state files.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -22,11 +22,31 @@ QUIPS = {  # 상태가 바뀔 때 책상 밑 글자 자리에 잠깐 뜨는 한�
     "fail": ["아니 왜", "망했다", "어…"],
 }
 CAPTIONS = {"idle_b": ["부재중", "쉬러감", "화장실감", "도망감"]}  # 포즈별 밑 글자 후보(포즈가 정해질 때 하나를 골라 대사가 없을 때 표시)
+STAGE_AFTER = {"idle": (60, 180), "wait": (30,)}  # 같은 상태가 이어진 초: 넘을 때마다 포즈가 한 단계 세진다(<포즈>~2, ~3 그림이 있을 때만)
 
 
 def variants(state, keys):
-    # 상태의 포즈 후보: "idle" -> ["idle", "idle_b", "idle_c"]처럼 같은 상태의 변형 키 전부
-    return [k for k in keys if k == state or k.startswith(state + "_")]
+    # 상태의 포즈 후보: "idle" -> ["idle", "idle_b", "idle_c"]처럼 같은 상태의 변형 키 전부. 단계 그림(~2, ~3)은 뽑지 않는다
+    return [k for k in keys if "~" not in k and (k == state or k.startswith(state + "_"))]
+
+
+def agent_label(agent_type, limit):
+    # 머리 위 이름: 사람마다 에이전트 이름이 달라 원래 이름을 그대로 쓴다. "plugin:name"이면 name만.
+    # 한 줄에 안 들어가면 -나 _ 뒤에서 끊어 두 줄로, 구분자가 없으면 limit에서 끊고, 둘째 줄도 넘치면 … 로 자른다
+    name = agent_type.rsplit(":", 1)[-1]
+    if len(name) <= limit:
+        return name
+    cut = max(name.rfind("-", 0, limit), name.rfind("_", 0, limit)) + 1 or limit
+    head, tail = name[:cut], name[cut:]
+    return head + "\n" + (tail if len(tail) <= limit else tail[:limit - 1] + "…")
+
+
+def staged(pose, state, elapsed, keys):
+    # 상태가 오래 이어질수록 같은 포즈의 더 센 단계 그림을 고른다. 그 단계 그림이 없으면 있는 것 중 가장 높은 단계
+    level = 1 + sum(elapsed >= s for s in STAGE_AFTER.get(state, ()))
+    while level > 1 and "%s~%d" % (pose, level) not in keys:
+        level -= 1
+    return pose if level == 1 else "%s~%d" % (pose, level)
 
 
 def merge_state(states):
@@ -129,8 +149,8 @@ def window():
     root.attributes("-topmost", True)
     root.attributes("-transparentcolor", KEY)
     root.configure(bg=KEY)
-    # 창 크기 고정: 세션 한 줄 = 하위 슬롯 4개(64px) + 메인(96px) 가로, 높이 그림 96 + 글자 24. 3줄.
-    root.geometry("352x360+%d+%d" % (root.winfo_screenwidth() - 160 - 256, root.winfo_screenheight() - 220 - 240))
+    # 창 크기 고정: 한 줄 = 하위 슬롯 4개(64px) + 메인(96px) 가로, 높이 이름 두 줄 28 + 그림 96 + 글자 24. 3줄.
+    root.geometry("352x444+%d+%d" % (root.winfo_screenwidth() - 160 - 256, root.winfo_screenheight() - 220 - 324))
 
     # images[zoom][옷 색 인덱스][상태]: PhotoImage, 참조를 들고 있어야 GC되지 않는다
     images = {3: [{} for _ in TUNICS], 2: [{} for _ in TUNICS]}
@@ -152,14 +172,17 @@ def window():
     for r in range(3):
         line = []
         for i in range(5):
+            tag = tk.Label(root, bg=KEY, fg="#ffffff", font=("Consolas", 8), bd=0, padx=3)  # 머리 위 에이전트 이름
+            tag.grid(row=3 * r, column=i, sticky="s")
             pic = tk.Label(root, bg=KEY, bd=0)
-            pic.grid(row=2 * r, column=i, sticky="s")
+            pic.grid(row=3 * r + 1, column=i, sticky="s")
             txt = tk.Label(root, bg=KEY, fg="#ffffff", font=("Consolas", 8), bd=0, padx=3)
-            txt.grid(row=2 * r + 1, column=i)
-            line.append((pic, txt))
+            txt.grid(row=3 * r + 2, column=i)
+            line.append((pic, txt, tag))
         slots.append(line)
-        root.grid_rowconfigure(2 * r, minsize=96)
-        root.grid_rowconfigure(2 * r + 1, minsize=24)
+        root.grid_rowconfigure(3 * r, minsize=28)
+        root.grid_rowconfigure(3 * r + 1, minsize=96)
+        root.grid_rowconfigure(3 * r + 2, minsize=24)
     for i in range(5):
         root.grid_columnconfigure(i, minsize=96 if i == 4 else 64)
 
@@ -204,11 +227,12 @@ def window():
                 found.setdefault("" if aid is None else d["type"], []).append(d)
         return found
 
-    def show(slot, zoom, ti, state, text):
+    def show(slot, zoom, ti, state, text, name):
         state = state if state in images[zoom][ti] else "idle"
         slot[0].configure(image=images[zoom][ti][state][(cur["n"] // 2) % 2])  # 200ms x 2 = 400ms
         # 글자 테두리가 투명 키 색(자홍)과 섞이면 분홍 번짐이 남으므로, 글자가 있을 때만 어두운 바탕을 깐다
         slot[1].configure(text=text, bg=TEXT_BG if text else KEY)
+        slot[2].configure(text=name, bg=TEXT_BG if name else KEY)
 
     order = {"": 0}  # 종류 -> 처음 본 순번(색 인덱스), 지휘자는 항상 0
     last_alive = {}  # 종류 -> 살아 있는 인스턴스를 마지막으로 본 시각
@@ -216,6 +240,7 @@ def window():
     quip = {}  # 종류 -> (대사, 표시 끝 시각)
     pose = {}  # 종류 -> 지금 그리는 포즈 키(상태가 바뀔 때 변형 중 하나를 랜덤으로 고름)
     caption = {}  # 종류 -> 지금 포즈의 밑 글자(포즈를 고를 때 함께 골라 tick마다 바뀌지 않게 함)
+    since = {}  # 종류 -> 지금 상태가 시작된 시각(단계 계산용)
     # 하위 종류 책상 자리: 아래 줄 칸 3->0, 가운데 줄 3->0, 위 줄 3->0
     cells = [(r, i) for r in (2, 1, 0) for i in (3, 2, 1, 0)]
 
@@ -233,6 +258,7 @@ def window():
                 quip.pop(t, None)
                 pose.pop(t, None)
                 caption.pop(t, None)
+                since.pop(t, None)
                 continue
             insts = alive.get(t, [])
             # done은 6초 지나면 idle로 본다
@@ -241,6 +267,7 @@ def window():
             ti = order[t] % len(TUNICS)
             if last_state.get(t) != state:
                 last_state[t] = state
+                since[t] = now
                 pose[t] = random.choice(variants(state, FRAMES) or [state])
                 caption[t] = random.choice(CAPTIONS.get(pose[t], [""]))
                 if state in QUIPS:
@@ -251,12 +278,13 @@ def window():
             # 밑 글자는 한글 대사만 보여 준다. 같은 종류가 여러 개면 개수 표시: 지휘자는 "3인분 하는 중", 하위 종류는 "알바 3명"
             text = ("%d인분 하는 중" if t == "" else "알바 %d명") % len(insts) if len(insts) >= 2 else ""
             text = caption.get(t) or text
+            drawn = staged(pose.get(t, state), state, now - since.get(t, now), FRAMES)
             if t == "":
-                shown[(2, 4)] = (3, ti, pose.get(t, state), said or text)
+                shown[(2, 4)] = (3, ti, drawn, said or text, "")
             else:
                 if k >= len(cells):  # ponytail: 하위 종류 12개까지만 표시
                     continue
-                shown[cells[k]] = (2, ti, pose.get(t, state), said or text)
+                shown[cells[k]] = (2, ti, drawn, said or text, agent_label(t, 9))
                 k += 1
         for r in range(3):
             for i in range(5):
@@ -266,6 +294,7 @@ def window():
                 else:
                     slot[0].configure(image="")
                     slot[1].configure(text="", bg=KEY)
+                    slot[2].configure(text="", bg=KEY)
         cur["n"] += 1
         root.after(200, tick)
 
@@ -317,7 +346,19 @@ def test():
     assert all(q and len(q) <= 5 for qs in QUIPS.values() for q in qs), QUIPS
     assert variants("idle", ["idle", "idle_b", "work", "done", "done_c"]) == ["idle", "idle_b"]
     assert variants("work", ["idle", "idle_b", "work"]) == ["work"]
-    assert all(k.split("_")[0] in ("idle", "work", "wait", "done", "fail") for k in FRAMES), list(FRAMES)
+    keys = ["idle", "idle_d", "idle_d~2", "idle_d~3", "wait", "wait~2"]
+    assert variants("idle", keys) == ["idle", "idle_d"]  # 단계 그림은 처음부터 뽑히지 않는다
+    for pose, state, sec, want in [("idle_d", "idle", 0, "idle_d"), ("idle_d", "idle", 60, "idle_d~2"),
+                                   ("idle_d", "idle", 200, "idle_d~3"), ("idle", "idle", 999, "idle"),
+                                   ("wait", "wait", 29, "wait"), ("wait", "wait", 31, "wait~2"),
+                                   ("wait", "wait", 999, "wait~2"), ("work", "work", 999, "work")]:
+        assert staged(pose, state, sec, keys) == want, (pose, sec)
+    assert all(k.split("~")[0] in FRAMES for k in FRAMES), list(FRAMES)  # 단계 그림마다 1단계 포즈가 있다
+    for name, want in [("Explore", "Explore"), ("task-worker", "task-\nworker"), ("default-worker", "default-\nworker"),
+                       ("caveman:cavecrew-builder", "cavecrew-\nbuilder"), ("general-purpose", "general-\npurpose"),
+                       ("verylongagentname", "verylonga\ngentname"), ("a-verylongagentname", "a-\nverylong…"), ("", "")]:
+        assert agent_label(name, 9) == want, name
+    assert all(k.split("_")[0].split("~")[0] in ("idle", "work", "wait", "done", "fail") for k in FRAMES), list(FRAMES)
     assert all(s in FRAMES for s in ("idle", "work", "wait", "done", "fail"))
     assert all(k in FRAMES and v and all(0 < len(s) <= 5 for s in v) for k, v in CAPTIONS.items()), CAPTIONS
     print("ok")

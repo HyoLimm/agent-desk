@@ -217,32 +217,49 @@ def work(f):
     return c
 
 
-def wait(f):
+def wait(f, lv=1):
+    """lv2: 울면서 매달림(눈물, 큰 울음, 높이 흔드는 종이, 모니터 쪽으로 뻗은 손)."""
     c = blank()
     pos = potato(c)
     tie(c, pos)
     scene(c)
     for ex in (4, 10):                          # 촉촉한 큰 눈 4x4
-        spr(c, pos, ex, 13, ["kkkk", "kwkk", "kkkk", "kkwk"])
+        if lv == 1:
+            spr(c, pos, ex, 13, ["kkkk", "kwkk", "kkkk", "kkwk"])
+        else:                                   # 큰 흰자에 동공
+            spr(c, pos, ex, 13, ["wwww", "wkkw", "wkkw", "wwww"])
     spr(c, pos, 4, 12, ["bb"])                 # 팔자 눈썹
     spr(c, pos, 6, 11, ["bb"])
     spr(c, pos, 12, 12, ["bb"])
     spr(c, pos, 10, 11, ["bb"])
-    spr(c, pos, 8, 18, ["kk"])
-    spr(c, pos, 7, 19, ["k..k"])
+    if lv == 1:
+        spr(c, pos, 8, 18, ["kk"])
+        spr(c, pos, 7, 19, ["k..k"])
+    else:                                       # 크게 벌린 울음
+        spr(c, pos, 7, 17, [".kkk.", "kdddk", "kdddk", ".kkk."])
     sprout_up(c, pos)
     # 서류: 외곽선 포함 7x8, 가슴 높이(눈 아래)에서 프레임 1에 1칸 위로 들썩
-    py = 19 - f
+    py = 19 - f * lv
     rect(c, 0, py, 7, 8, "k")
     rect(c, 1, py + 1, 5, 6, "w")
     rect(c, 2, py + 2, 3, 1, "k")
     rect(c, 2, py + 4, 3, 1, "k")
     rect(c, 4, py + 5, 2, 2, "r")
     arm(c, 3, 22, 6, py + 5)
-    arm(c, 15, 19, 12, 21)
+    if lv == 1:
+        arm(c, 15, 19, 12, 21)
+    else:
+        arm(c, 15, 19, 18, 19)                  # 모니터 쪽으로 뻗어 매달림
     stamp(c, 21, 10, [".yyyy.", "yy..yy", "....yy", "...yy.", "..yy..", "......", "..yy.."])
     if f == 0:
         rect(c, 27, 16, 1, 2, "w")
+    if lv == 2:
+        for x in (4, 13):                       # 눈물 줄기
+            for y in range(17, 25):
+                if (y + f + (x == 13)) % 4:
+                    put(c, x, y, "t")
+        for x, y in ((1, 1 + f), (13, 2 - f)):   # 머리 위 느낌표 2개
+            stamp(c, x, y, ["yy", "yy", "yy", "..", "yy"])
     return c
 
 
@@ -658,13 +675,252 @@ def idle_b(f):
     return c
 
 
+def _saver(c, f, spots):
+    """어두운 화면 보호기: t 점 하나가 프레임마다 옮겨 다님."""
+    put(c, *spots[f], "t")
+
+
+FLY = ["w..w", ".kk."]
+IDLE_D_FLIES = {
+    2: ([(1, 2), (14, 5), (0, 8)], [(13, 2), (1, 5), (-1, 11)]),
+    3: ([(0, 1), (1, 5), (-1, 9)], [(2, 1), (0, 6), (-1, 11)]),
+}
+IDLE_D_GHOST = (
+    [".wwww.", "wwwwww", "wkwwkw", "wwwwww", "wwkkww", "wwwww.", "www...", "ww...."],
+    [".wwww.", "wwwwww", "wkwwkw", "wwwwww", "wwkkww", ".wwwww", ".ww...", "ww...."],
+)
+
+
+def idle_d(f, lv=1):
+    """멍때리기: 점 눈, 벌어진 입, 축 처진 팔, 머리 위를 빙빙 도는 파리.
+    lv2: 큰 입+침+파리 3마리, lv3: 영혼이 빠져나가고 거미줄."""
+    c = blank()
+    pos = potato(c)
+    tie(c, pos)
+    scene(c)
+    spr(c, pos, 6, 14, ["kk", "kk"])
+    spr(c, pos, 11, 14, ["kk", "kk"])
+    if lv == 1:
+        spr(c, pos, 8, 17, [".k.", "k.k", ".k."])
+    else:
+        spr(c, pos, 6, 17, [".kkkk.", "kddddk", ".kkkk."])
+    sprout_up(c, pos)
+    _saver(c, f, [(21, 12), (26, 14)])
+    arm(c, 3, 19, 1, 23)
+    arm(c, 15, 19, 10, 23)
+    if lv >= 2:
+        for y in range(19, 23 if f else 25):         # 입가에서 책상 쪽으로 늘어진 침
+            put(c, 6, y, "w")
+        if f:
+            put(c, 6, 24, "w")
+    if lv == 1:
+        flies = [(1, 2)] if f == 0 else [(13, 2)]
+    else:
+        flies = IDLE_D_FLIES[lv][f]
+    for x, y in flies:
+        stamp(c, x, y, FLY)
+    for x, y in ((6, 1), (8, 0), (10, 1)):
+        put(c, x, y, "g")
+    if lv == 3:
+        stamp(c, 11, 0, IDLE_D_GHOST[f])
+        for x, y in ((4, 3), (5, 4), (6, 5), (7, 6), (5, 6), (6, 6), (4, 6), (5, 5)):   # 거미줄 한 조각
+            put(c, x, y, "g")
+    return c
+
+
+COMBO_DIGIT = (["yyy", "..y", "yyy", "..y", "yyy"], ["y.y", "y.y", "yyy", "..y", "..y"])
+FLAME_TALL = [".r.", ".r.", "rr.", "rrr", "ryr", "ryr"]
+FLAME_MID = [".r.", ".rr", "rrr", "ryr", "ryr"]
+FLAME_LOW = [".r.", "rrr", "ryr"]
+
+
+def idle_e(f, lv=1):
+    """게임하기: 모니터에 떨어지는 블록, 화면을 곁눈질하는 감자, 혀, 바쁜 손.
+    lv2: 땀+콤보+더 높은 블록, lv3: 게임 오버 화면+불꽃."""
+    c = blank()
+    pos = potato(c)
+    tie(c, pos)
+    scene(c)
+    for ex in (5, 10):
+        spr(c, pos, ex, 13, ["www"] * 3)
+        spr(c, pos, ex + 1, 14, ["kk"])
+    if lv == 1:
+        spr(c, pos, 5, 11, ["kkk"])
+        spr(c, pos, 10, 11, ["kkk"])
+    elif lv == 2:                                                  # 안쪽으로 기운 눈썹
+        spr(c, pos, 5, 10, ["kk.", ".kk"])
+        spr(c, pos, 10, 10, [".kk", "kk."])
+    else:                                                          # 화난 V자 눈썹
+        for bx, by in ((4, 11), (6, 12), (12, 11), (10, 12)):
+            spr(c, pos, bx, by, ["kk"])
+    if lv == 3:
+        spr(c, pos, 6, 17, ["kkkkkk"])                             # 이를 악문 입
+        spr(c, pos, 6, 18, ["kwwwwk"])
+        spr(c, pos, 7, 19, ["kkkk"])
+    else:
+        spr(c, pos, 6, 17, ["kkkkkk"])
+        spr(c, pos, 10, 18, ["rr"])
+        spr(c, pos, 10, 19, ["rr"])
+    if lv == 2:                                                    # 이마 땀방울
+        for x, y in (((6, 8), (6, 9), (10, 8), (10, 9), (8, 9)),
+                     ((7, 8), (7, 9), (9, 8), (9, 9)))[f]:
+            put(c, x, y, "w")
+    sprout_up(c, pos)
+    if lv == 3:
+        screen(c, "r")
+        rect(c, 20, 10, 8, 2, "w")                                 # GAME OVER 느낌의 가로줄 2개
+        rect(c, 21, 14, 6, 2, "w")
+        for x, y, rows in ([(2, 2, FLAME_TALL), (12, 2, FLAME_TALL), (15, 4, FLAME_LOW),
+                            (-1, 9, FLAME_MID), (-1, 15, FLAME_MID)],
+                           [(2, 3, FLAME_MID), (12, 3, FLAME_MID), (14, 0, FLAME_TALL),
+                            (-1, 10, FLAME_TALL), (-1, 16, FLAME_MID)])[f]:
+            stamp(c, x, y, rows)
+        _typing(c, pos, f)
+        return c
+    for x, ch in ((19, "t"), (21, "y"), (25, "r"), (27, "t")):     # 쌓인 블록 아랫줄
+        rect(c, x, 16, 2, 2, ch)
+    for x, ch in ((19, "r"), (21, "t"), (25, "r"), (27, "y")):     # 윗줄
+        rect(c, x, 14, 2, 2, ch)
+    if lv == 1:
+        ty = 9 + 2 * f                                             # 떨어지는 T 블록
+        rect(c, 21, ty, 6, 2, "y")
+        rect(c, 23, ty + 2, 2, 2, "y")
+    else:
+        rect(c, 25, 12, 2, 2, "r")                                 # 오른쪽 기둥이 더 높이 쌓임
+        rect(c, 27, 12, 2, 2, "y")
+        rect(c, 25, 10, 2, 2, "t")
+        rect(c, 27, 10, 2, 2, "r")
+        rect(c, 23, 9 + 2 * f, 2, 2, "y")                          # 틈으로 떨어지는 블록
+        stamp(c, 19, 9, COMBO_DIGIT[f])                            # 깜빡이는 콤보 숫자
+    _typing(c, pos, f)
+    return c
+
+
+def idle_f(f, lv=1):
+    """영상 보기: 화면 가운데 재생 버튼, 진행 막대, 턱을 괴고 넋 놓은 감자.
+    lv2: 깔깔 웃으며 책상 두드림, lv3: 감동해서 눈물 콸콸."""
+    c = blank()
+    pos = potato(c)
+    tie(c, pos)
+    scene(c)
+    if lv == 1:
+        for ex in (5, 10):
+            spr(c, pos, ex, 13, ["kkk", "wkk", "www"])
+        spr(c, pos, 7, 17, ["k..k", ".kk."])
+    elif lv == 2:
+        spr(c, pos, 5, 14, [".k.", "k.k"])                         # 감은 ^ 눈
+        spr(c, pos, 10, 14, [".k.", "k.k"])
+        spr(c, pos, 6, 17, ["kkkkkk", "kdrrdk", ".kkkk."])         # 크게 벌린 웃음 + 혀
+    else:
+        spr(c, pos, 5, 14, ["k.k", ".k."])                         # 감은 눈
+        spr(c, pos, 10, 14, ["k.k", ".k."])
+        spr(c, pos, 7, 17, (["k.k.k", ".k.k."], [".k.k.", "k.k.k"])[f])   # 떨리는 입
+        gaps = ((19, 22), (18, 21))[f]                             # 눈물 줄기가 흘러내림
+        for x in (5, 12):
+            for y in range(16, 25):
+                if y not in gaps:
+                    put(c, x, y, "w")
+    sprout_up(c, pos)
+    stamp(c, 21, 9, [".rrrrr.", "rrrrrrr", "rrrrrrr", "rrrrrrr", ".rrrrr."])
+    stamp(c, 23, 10, ["w..", "ww.", "w.."])
+    rect(c, 20, 16, 8, 1, "g")
+    mx = (21 + 2 * f, 24 + f, 26 + f)[lv - 1]
+    if lv > 1:
+        rect(c, 20, 16, mx - 20, 1, "w")                           # 진행된 만큼 채움
+    rect(c, mx, 15, 2, 2, "w")
+    if lv == 1:
+        arm(c, 3, 19, 1, 22)
+        line(c, 15, 19, 13, 24, "k")                  # 팔꿈치는 책상 위, 손은 턱 밑
+        line(c, 13, 24, 11, 21, "k")
+        rect(c, 9, 19, 4, 4, "k")
+        rect(c, 10, 20, 2, 2, "p")
+    elif lv == 2:
+        arm(c, 3, 19, 1, 22)
+        hx, hy = ((13, 21), (12, 24))[f]                           # 번갈아 책상을 두드리는 손
+        ox, oy = ((12, 24), (13, 21))[f]
+        arm(c, 15, 19, hx, hy, trail=[(ox, oy)])
+        for pts in (((14, 2), (13, 3)), ((16, 5), (15, 6)), ((1, 4), (2, 5))):
+            for x, y in pts:
+                put(c, x, y + f, "y")
+    else:
+        arm(c, 3, 19, 1, 22)
+        arm(c, 15, 19, 14, 22)
+        stamp(c, 0, 16, ["kkkkk", "kwwwk", "kwwwk", "kwwwk", "kkkkk"])   # 휴지 덩어리
+    return c
+
+
+IDLE_G_BUSH = ["....tt...", ".tt.tt.tt", "..ttttt..", "..tt..tt.", "....t....", "....t...."]
+IDLE_G_FLOWER = ["..y..", ".yyy.", "yyryy", ".yyy.", "..y.."]
+IDLE_G_SPARKLES = ([(15, 1), (4, 1), (15, 6)], [(16, 3), (6, 1), (14, 7)])
+IDLE_G_DROPS_BUSH = (
+    [(9, 3), (9, 6), (12, 3), (7, 4), (14, 4), (11, 6), (15, 2)],
+    [(9, 2), (7, 2), (12, 2), (13, 4), (11, 5), (10, 5), (14, 6)],
+)
+
+
+def idle_g(f, lv=1):
+    """셀프 물주기: 머리 옆 바깥에서 분무기로 새싹에 물, 행복한 눈, 쑥 자라는 새싹.
+    lv2: 잎 무성+물방울 증가, lv3: 꽃이 활짝+감격."""
+    c = blank()
+    pos = potato(c, ox=1, oy=1)
+    tie(c, pos)
+    scene(c)
+    spr(c, pos, 5, 14, [".k.", "k.k"])
+    spr(c, pos, 10, 14, [".k.", "k.k"])
+    if lv == 3:
+        spr(c, pos, 6, 17, ["kkkkkk"])                             # 큰 웃음
+        spr(c, pos, 6, 18, ["kwwwwk"])
+        spr(c, pos, 7, 19, ["kkkk"])
+        spr(c, pos, 4, 16, ["w", "w"])                             # 감격의 눈물 한 방울
+    else:
+        spr(c, pos, 6, 17, ["k....k"])
+        spr(c, pos, 7, 18, ["kkkk"])
+    if lv > 1:
+        stamp(c, 6, 2, IDLE_G_BUSH)
+        if f:
+            stamp(c, 10, 1, ["tt"])
+    elif f == 0:
+        sprout_up(c, pos)
+    else:
+        spr(c, pos, 7, -1, ["ttt"])
+        spr(c, pos, 6, 0, ["tt.tt"])
+        spr(c, pos, 7, 1, ["ttt"])
+        spr(c, pos, 8, 2, ["t", "t", "t", "t"])
+    if lv == 3:
+        stamp(c, 8, 0, IDLE_G_FLOWER)
+    _saver(c, f, [(21, 11), (25, 15)])
+    # 병 모양 분무기: 머리(노즐 tt + 끝 k, 방아쇠 k) -> 좁은 목 -> 아래로 넓은 몸통
+    stamp(c, 0, 3, [".kkkk...", "kgggk...", "kgggkttk", "kgggkk..",
+                    ".kgk.k..", "kgggk...", "kggggk..", "kkkkk..."])
+    arm(c, 3, 19, 1, 11)
+    arm(c, 15, 19, 11, 22)
+    if lv == 1:
+        drops = ([(8, 3), (9, 2), (10, 3), (7, 2)], [(7, 4), (8, 3), (8, 5), (6, 3)])[f]
+    else:
+        drops = IDLE_G_DROPS_BUSH[f]
+    for x, y in drops:
+        put(c, x, y, "w")
+    if lv == 3:
+        for x, y in IDLE_G_SPARKLES[f]:
+            stamp(c, x - 1, y - 1, [".y.", "yyy", ".y."])
+    return c
+
+
 def _build():
     out = {}
-    for name, fn in (("idle", idle), ("idle_b", idle_b), ("idle_c", idle_c), ("work", work),
+    for name, fn in (("idle", idle), ("idle_b", idle_b), ("idle_c", idle_c),
+                     ("idle_d", idle_d), ("idle_d~2", lambda f: idle_d(f, 2)),
+                     ("idle_d~3", lambda f: idle_d(f, 3)),
+                     ("idle_e", idle_e), ("idle_e~2", lambda f: idle_e(f, 2)),
+                     ("idle_e~3", lambda f: idle_e(f, 3)),
+                     ("idle_f", idle_f), ("idle_f~2", lambda f: idle_f(f, 2)),
+                     ("idle_f~3", lambda f: idle_f(f, 3)),
+                     ("idle_g", idle_g), ("idle_g~2", lambda f: idle_g(f, 2)),
+                     ("idle_g~3", lambda f: idle_g(f, 3)), ("work", work),
                      ("work_b", work_b), ("work_c", work_c),
                      ("work_d", work_d), ("work_e", work_e), ("work_f", work_f),
                      ("work_g", work_g), ("work_h", work_h),
-                     ("wait", wait), ("done", done), ("done_b", done_b), ("done_c", done_c),
+                     ("wait", wait), ("wait~2", lambda f: wait(f, 2)), ("done", done), ("done_b", done_b), ("done_c", done_c),
                      ("fail", fail)):
         out[name] = [text(fn(f)) for f in (0, 1)]
     return out
@@ -673,8 +929,12 @@ def _build():
 FRAMES = _build()
 
 if __name__ == "__main__":
-    assert list(FRAMES) == ["idle", "idle_b", "idle_c", "work", "work_b", "work_c",
-                            "work_d", "work_e", "work_f", "work_g", "work_h", "wait", "done", "done_b", "done_c", "fail"]
+    assert list(FRAMES) == ["idle", "idle_b", "idle_c",
+                            "idle_d", "idle_d~2", "idle_d~3", "idle_e", "idle_e~2", "idle_e~3",
+                            "idle_f", "idle_f~2", "idle_f~3", "idle_g", "idle_g~2", "idle_g~3",
+                            "work", "work_b", "work_c",
+                            "work_d", "work_e", "work_f", "work_g", "work_h",
+                            "wait", "wait~2", "done", "done_b", "done_c", "fail"]
     ok_chars = set(PALETTE) | {"."}
     for name, fr in FRAMES.items():
         assert len(fr) == 2, name

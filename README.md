@@ -28,6 +28,8 @@ Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상�
 - 10분 동안 쓰이지 않은 책상은 숨겨집니다.
 - 창은 끌어서 옮기고, 오른쪽 클릭으로 닫습니다.
 - 쉼, 작업, 완료는 여러 포즈 중 하나가 랜덤으로 나옵니다.
+- 쉼과 결재 대기는 오래 이어질수록 같은 포즈가 점점 과장됩니다(쉼은 1분·3분, 결재 대기는 30초).
+- 하위 에이전트 책상에는 머리 위에 에이전트 이름이 뜹니다.
 
 ### 상태
 
@@ -81,6 +83,8 @@ A pixel potato office worker at a desk that shows what each Claude Code session 
 - A desk that goes unused for 10 minutes is hidden.
 - Drag to move the window. Right-click to close it.
 - Idle, work and done each pick one of several poses at random.
+- Idle and waiting poses escalate the longer they last (idle at 1 and 3 minutes, waiting at 30 seconds).
+- Each subagent desk shows the agent's name above the character.
 
 ### States
 

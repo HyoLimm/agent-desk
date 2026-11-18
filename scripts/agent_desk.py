@@ -10,6 +10,7 @@ import time
 
 STATE_DIR = os.path.join(os.path.expanduser("~"), ".claude", "agent-desk", "state")
 KEY = "#ff00ff"
+TEXT_BG = "#1a1020"  # 밑 글자 바탕(스프라이트 외곽선과 같은 거의 검정)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # 세션별 네온 강조색: 초록, 청록, 자홍, 보라, 라임, 주황
 TUNICS = ["#30e060", "#30d0f0", "#f050d0", "#a070ff", "#c0f030", "#ff8030"]
@@ -153,7 +154,7 @@ def window():
         for i in range(5):
             pic = tk.Label(root, bg=KEY, bd=0)
             pic.grid(row=2 * r, column=i, sticky="s")
-            txt = tk.Label(root, bg=KEY, fg="#ffffff", font=("Consolas", 8), bd=0)
+            txt = tk.Label(root, bg=KEY, fg="#ffffff", font=("Consolas", 8), bd=0, padx=3)
             txt.grid(row=2 * r + 1, column=i)
             line.append((pic, txt))
         slots.append(line)
@@ -206,7 +207,8 @@ def window():
     def show(slot, zoom, ti, state, text):
         state = state if state in images[zoom][ti] else "idle"
         slot[0].configure(image=images[zoom][ti][state][(cur["n"] // 2) % 2])  # 200ms x 2 = 400ms
-        slot[1].configure(text=text)
+        # 글자 테두리가 투명 키 색(자홍)과 섞이면 분홍 번짐이 남으므로, 글자가 있을 때만 어두운 바탕을 깐다
+        slot[1].configure(text=text, bg=TEXT_BG if text else KEY)
 
     order = {"": 0}  # 종류 -> 처음 본 순번(색 인덱스), 지휘자는 항상 0
     last_alive = {}  # 종류 -> 살아 있는 인스턴스를 마지막으로 본 시각
@@ -263,7 +265,7 @@ def window():
                     show(slot, *shown[(r, i)])
                 else:
                     slot[0].configure(image="")
-                    slot[1].configure(text="")
+                    slot[1].configure(text="", bg=KEY)
         cur["n"] += 1
         root.after(200, tick)
 

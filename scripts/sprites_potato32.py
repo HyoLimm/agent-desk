@@ -219,7 +219,7 @@ def work(f):
 
 def wait(f):
     c = blank()
-    pos = potato(c, ox=f)
+    pos = potato(c)
     tie(c, pos)
     scene(c)
     for ex in (4, 10):                          # 촉촉한 큰 눈 4x4
@@ -231,14 +231,15 @@ def wait(f):
     spr(c, pos, 8, 18, ["kk"])
     spr(c, pos, 7, 19, ["k..k"])
     sprout_up(c, pos)
-    # 서류: 4x5 + 줄 2개 + 도장 자리
-    px, py = 1 + f, 14
-    rect(c, px, py, 4, 5, "w")
-    rect(c, px + 1, py + 1, 2, 1, "k")
-    rect(c, px, py + 2, 3, 1, "k")
-    put(c, px + 3, py + 4, "r")
-    arm(c, 4 + f, 21, px + 2, py + 5)
-    arm(c, 15 + f, 19, 12, 21)
+    # 서류: 외곽선 포함 7x8, 가슴 높이(눈 아래)에서 프레임 1에 1칸 위로 들썩
+    py = 19 - f
+    rect(c, 0, py, 7, 8, "k")
+    rect(c, 1, py + 1, 5, 6, "w")
+    rect(c, 2, py + 2, 3, 1, "k")
+    rect(c, 2, py + 4, 3, 1, "k")
+    rect(c, 4, py + 5, 2, 2, "r")
+    arm(c, 3, 22, 6, py + 5)
+    arm(c, 15, 19, 12, 21)
     stamp(c, 21, 10, [".yyyy.", "yy..yy", "....yy", "...yy.", "..yy..", "......", "..yy.."])
     if f == 0:
         rect(c, 27, 16, 1, 2, "w")

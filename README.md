@@ -26,7 +26,7 @@ Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상�
 - 같은 종류의 에이전트가 여러 개면 한 책상을 같이 쓰고 개수를 표시합니다(예: `알바 3명`). 지휘자 책상은 살아 있는 채팅 수를 표시합니다(예: `3인분 하는 중`).
 - 책상의 상태가 바뀌면 몇 초 동안 짧은 한마디가 뜹니다.
 - 10분 동안 쓰이지 않은 책상은 숨겨집니다.
-- 창은 끌어서 옮기고, 오른쪽 클릭으로 닫습니다.
+- 창은 끌어서 옮깁니다. 캐릭터를 오른쪽 클릭하면 메뉴에서 캐릭터(감자, 햄스터)를 고르거나 창을 닫을 수 있고, 고른 캐릭터는 다음에도 유지됩니다.
 - 쉼, 작업, 완료는 여러 포즈 중 하나가 랜덤으로 나옵니다.
 - 쉼과 결재 대기는 오래 이어질수록 같은 포즈가 점점 과장됩니다(쉼은 1분·3분, 결재 대기는 30초).
 - 하위 에이전트 책상에는 머리 위에 에이전트 이름이 뜹니다.
@@ -51,7 +51,7 @@ Claude Code 세션과 하위 에이전트가 지금 무엇을 하는지, 책상�
 /plugin uninstall agent-desk@agent-desk
 ```
 
-창은 오른쪽 클릭으로 닫고, 상태 파일까지 지우려면 `~/.claude/agent-desk` 폴더를 삭제합니다.
+창은 오른쪽 클릭 메뉴의 "닫기"로 닫고, 상태 파일까지 지우려면 `~/.claude/agent-desk` 폴더를 삭제합니다.
 
 ### 라이선스
 
@@ -81,7 +81,7 @@ A pixel potato office worker at a desk that shows what each Claude Code session 
 - Several agents of the same type share a desk and show a count (Korean, e.g. `알바 3명`; the conductor desk shows the number of live chats, e.g. `3인분 하는 중`).
 - When a desk changes state it shows a short quip for a few seconds (Korean for now).
 - A desk that goes unused for 10 minutes is hidden.
-- Drag to move the window. Right-click to close it.
+- Drag to move the window. Right-click a character to pick a character (potato or hamster) or close the window; the choice is remembered.
 - Idle, work and done each pick one of several poses at random.
 - Idle and waiting poses escalate the longer they last (idle at 1 and 3 minutes, waiting at 30 seconds).
 - Each subagent desk shows the agent's name above the character.
@@ -106,7 +106,7 @@ State files are written only to `~/.claude/agent-desk/state`. Nothing is sent ov
 /plugin uninstall agent-desk@agent-desk
 ```
 
-Right-click the window to close it, then delete `~/.claude/agent-desk` if you want to remove the state files.
+Close the window from the right-click menu, then delete `~/.claude/agent-desk` if you want to remove the state files.
 
 ### License
 

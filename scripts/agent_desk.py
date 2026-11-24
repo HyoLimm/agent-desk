@@ -9,6 +9,8 @@ import sys
 import time
 
 STATE_DIR = os.path.join(os.path.expanduser("~"), ".claude", "agent-desk", "state")
+CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".claude", "agent-desk", "config.json")
+SKINS = {"감자": "sprites_potato32", "햄스터": "sprites_hamster32"}  # 메뉴 이름 -> 그림 모듈(scripts 폴더에 있는 것만 메뉴에 뜬다)
 KEY = "#ff00ff"
 TEXT_BG = "#1a1020"  # 밑 글자 바탕(스프라이트 외곽선과 같은 거의 검정)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -133,6 +135,25 @@ def hook():
         pass
 
 
+def saved_skin():
+    # 마지막으로 고른 캐릭터 이름. 없거나 깨졌거나 모르는 이름이면 첫 캐릭터
+    try:
+        with open(CONFIG_PATH, encoding="utf-8") as f:
+            name = json.load(f).get("skin")
+    except Exception:
+        name = None
+    return name if name in SKINS else next(iter(SKINS))
+
+
+def save_skin(name):
+    try:
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump({"skin": name}, f, ensure_ascii=False)
+    except OSError:
+        pass
+
+
 def window():
     if sys.platform != "win32":
         sys.stderr.write("agent-desk: Windows 전용\n")
@@ -142,7 +163,7 @@ def window():
         guard.bind(("127.0.0.1", 47613))  # ponytail: 고정 포트로 단일 실행 보장, 다른 프로그램과 겹치면 포트 변경
     except OSError:
         return
-    from sprites_potato32 import FRAMES, PALETTE
+    import importlib
     import tkinter as tk
     root = tk.Tk()
     root.overrideredirect(True)
@@ -152,20 +173,28 @@ def window():
     # 창 크기 고정: 한 줄 = 하위 슬롯 4개(64px) + 메인(96px) 가로, 높이 이름 두 줄 28 + 그림 96 + 글자 24. 3줄.
     root.geometry("352x444+%d+%d" % (root.winfo_screenwidth() - 160 - 256, root.winfo_screenheight() - 220 - 324))
 
-    # images[zoom][옷 색 인덱스][상태]: PhotoImage, 참조를 들고 있어야 GC되지 않는다
-    images = {3: [{} for _ in TUNICS], 2: [{} for _ in TUNICS]}
-    n = len(FRAMES["idle"][0])
-    for ti, tunic in enumerate(TUNICS):
-        for name, pair in FRAMES.items():
-            for zoom in images:
-                images[zoom][ti][name] = []
-            for rows in pair:
-                img = tk.PhotoImage(width=n, height=n)
-                for y, row in enumerate(rows):
-                    for x, c in enumerate(row):
-                        img.put(tunic if c == "t" else PALETTE.get(c, KEY), (x, y))
+    # 고를 수 있는 캐릭터: 그림 모듈이 실제로 있는 것만
+    skins = [s for s in SKINS if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), SKINS[s] + ".py"))]
+    skin = {"name": None, "FRAMES": {}, "images": {}}
+
+    def load_skin(name):
+        # images[zoom][옷 색 인덱스][상태]: PhotoImage, 참조를 들고 있어야 GC되지 않는다
+        mod = importlib.import_module(SKINS[name])
+        frames, palette = mod.FRAMES, mod.PALETTE
+        images = {3: [{} for _ in TUNICS], 2: [{} for _ in TUNICS]}
+        n = len(frames["idle"][0])
+        for ti, tunic in enumerate(TUNICS):
+            for key, pair in frames.items():
                 for zoom in images:
-                    images[zoom][ti][name].append(img.zoom(zoom))
+                    images[zoom][ti][key] = []
+                for rows in pair:
+                    img = tk.PhotoImage(width=n, height=n)
+                    img.put(tuple(tuple(tunic if c == "t" else palette.get(c, KEY) for c in row) for row in rows))
+                    for zoom in images:
+                        images[zoom][ti][key].append(img.zoom(zoom))
+        skin.update(name=name, FRAMES=frames, images=images)
+
+    load_skin(saved_skin() if saved_skin() in skins else skins[0])
 
     # slots[줄][칸]: 칸 0~3 = 하위(왼쪽부터), 칸 4 = 메인. 위젯은 여기서 한 번만 만든다.
     slots = []
@@ -193,7 +222,21 @@ def window():
 
     root.bind_all("<ButtonPress-1>", press)
     root.bind_all("<B1-Motion>", lambda e: root.geometry("+%d+%d" % (e.x_root - drag[0], e.y_root - drag[1])))
-    root.bind_all("<Button-3>", lambda e: root.destroy())
+    menu = tk.Menu(root, tearoff=0)
+    choice = tk.StringVar(value=skin["name"])
+
+    def pick_skin():
+        # 고른 캐릭터를 저장하고 그림을 다시 만든다. 포즈 기억은 새 캐릭터 기준으로 다시 뽑게 비운다
+        save_skin(choice.get())
+        load_skin(choice.get())
+        for memo in (last_state, pose, caption, since):
+            memo.clear()
+
+    for s in skins:
+        menu.add_radiobutton(label=s, variable=choice, value=s, command=pick_skin)
+    menu.add_separator()
+    menu.add_command(label="닫기", command=root.destroy)
+    root.bind_all("<Button-3>", lambda e: menu.tk_popup(e.x_root, e.y_root))
 
     cur = {"n": 0}
 
@@ -228,6 +271,7 @@ def window():
         return found
 
     def show(slot, zoom, ti, state, text, name):
+        images = skin["images"]
         state = state if state in images[zoom][ti] else "idle"
         slot[0].configure(image=images[zoom][ti][state][(cur["n"] // 2) % 2])  # 200ms x 2 = 400ms
         # 글자 테두리가 투명 키 색(자홍)과 섞이면 분홍 번짐이 남으므로, 글자가 있을 때만 어두운 바탕을 깐다
@@ -268,7 +312,7 @@ def window():
             if last_state.get(t) != state:
                 last_state[t] = state
                 since[t] = now
-                pose[t] = random.choice(variants(state, FRAMES) or [state])
+                pose[t] = random.choice(variants(state, skin["FRAMES"]) or [state])
                 caption[t] = random.choice(CAPTIONS.get(pose[t], [""]))
                 if state in QUIPS:
                     quip[t] = (random.choice(QUIPS[state]), now + 4)
@@ -278,7 +322,7 @@ def window():
             # 밑 글자는 한글 대사만 보여 준다. 같은 종류가 여러 개면 개수 표시: 지휘자는 "3인분 하는 중", 하위 종류는 "알바 3명"
             text = ("%d인분 하는 중" if t == "" else "알바 %d명") % len(insts) if len(insts) >= 2 else ""
             text = caption.get(t) or text
-            drawn = staged(pose.get(t, state), state, now - since.get(t, now), FRAMES)
+            drawn = staged(pose.get(t, state), state, now - since.get(t, now), skin["FRAMES"])
             if t == "":
                 shown[(2, 4)] = (3, ti, drawn, said or text, "")
             else:
@@ -303,6 +347,18 @@ def window():
 
 
 def test():
+    import importlib
+    here = os.path.dirname(os.path.abspath(__file__))
+    for skin_name, mod_name in SKINS.items():  # 있는 캐릭터마다 기본 5상태와 32x32 프레임을 갖췄는지
+        if not os.path.exists(os.path.join(here, mod_name + ".py")):
+            continue
+        mod = importlib.import_module(mod_name)
+        assert all(s in mod.FRAMES for s in ("idle", "work", "wait", "done", "fail")), skin_name
+        assert len(mod.PALETTE) <= 9, skin_name
+        for key, pair in mod.FRAMES.items():
+            assert len(pair) == 2 and all(len(rows) == 32 and all(len(r) == 32 and set(r) <= set(mod.PALETTE) | {"."}
+                                                                   for r in rows) for rows in pair), (skin_name, key)
+    assert saved_skin() in SKINS
     from sprites_potato32 import FRAMES, PALETTE
     assert len(FRAMES["idle"][0]) == 32
     for name, pair in FRAMES.items():

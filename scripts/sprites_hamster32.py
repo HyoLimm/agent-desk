@@ -159,25 +159,33 @@ def base(c, **kw):
 # ---------------------------------------------------------------- 상태
 def idle(f):
     c = blank()
-    mask = set()
-    for y in range(14, 25):                      # 몸을 말고 자는 털 뭉치
-        hw = 7 * (1 - ((y - 19.5) / 5.5) ** 2) ** 0.5
-        for x in range(round(8.5 - hw), int(8.5 + hw) + 1):
-            mask.add((x, y))
-    outline_fill(c, mask)
-    for x, y in ((4, 19), (5, 20), (6, 21), (9, 17), (10, 18), (11, 19), (8, 22), (9, 23)):
-        put(c, x, y, "k")                        # 털결
-    stamp(c, 3, 12, ["kkk", "kck", "kkk"])       # 파묻은 머리의 귀
-    stamp(c, 6, 12, ["kkk", "kck", "kkk"])
-    rect(c, 13, 17, 4, 4, "k")                   # 꼬리
-    rect(c, 14, 18, 2, 2, "c")
     scene(c)
+    tmp = blank()
+    hamster(tmp)
+    for y in range(32):                          # 몸을 3칸 내려 책상에 턱을 괸다
+        for x in range(32):
+            if tmp[y][x] != "." and 0 <= y + 3 <= 24:
+                c[y + 3][x] = tmp[y][x]
+    rect(c, 2, 10, 4, 2, ".")                    # 원래 귀 자리 지우고 축 처진 귀
+    rect(c, 11, 10, 4, 2, ".")
+    stamp(c, 2, 11, ["kkk", "kck", ".kk"])
+    stamp(c, 13, 11, ["kkk", "kck", "kk."])
+    for ex in (4, 11):
+        rect(c, ex, 15, 3, 2, "o")
+        stamp(c, ex, 15, ["k.k", "kkk"])         # 감은 눈
+    stamp(c, 7, 20, ["kk"])                      # 벌어진 입
+    put(c, 6, 21, "w")                           # 침
+    put(c, 6, 22, "w")
+    stamp(c, 2, 23, ["kkkk", "kcck"])            # 책상 위 앞발
+    stamp(c, 12, 23, ["kkkk", "kcck"])
     if f == 0:
-        stamp(c, 11, 9, ["ww.", ".w.", ".ww"])
+        stamp(c, 9, 18, ["kkkk", "kwwk", "kwwk", "kkkk"])
+        stamp(c, 11, 6, ["www", ".w.", "www"])
         put(c, 22, 12, "t")
     else:
-        stamp(c, 10, 2, ["wwwww", "...w.", "..w..", ".w...", "wwwww"])
-        stamp(c, 7, 7, ["ww", ".w"])
+        stamp(c, 9, 17, ["kkkkkk", "kwwwwk", "kwwwwk", "kwwwwk", "kwwwwk", "kkkkkk"])
+        stamp(c, 10, 0, ["wwwww", "...w.", "..w..", ".w...", "wwwww"])
+        stamp(c, 6, 5, ["www", ".w.", "www"])
         put(c, 26, 15, "t")
     return c
 
